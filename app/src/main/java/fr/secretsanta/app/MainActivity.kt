@@ -146,7 +146,7 @@ class MainActivity : Activity() {
                 val rawName = cursor.getString(0).orEmpty().trim()
                 val rawPhone = cursor.getString(1).orEmpty()
                 val normalized = rawPhone.replace(Regex("[^+0-9]"), "")
-                if (rawName.isBlank() || !normalized.matches(Regex("\\\\+?[0-9]{8,15}"))) {
+                if (rawName.isBlank() || !normalized.matches(Regex("\\+?[0-9]{8,15}"))) {
                     toast("Nom ou numéro invalide : ajoute ce participant manuellement")
                     return
                 }
