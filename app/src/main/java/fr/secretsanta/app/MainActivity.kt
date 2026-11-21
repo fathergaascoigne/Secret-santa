@@ -286,12 +286,12 @@ class MainActivity : Activity() {
         val money = budget.text.toString().trim()
         val note = greeting.text.toString().trim()
         val tasks = people.indices.map { i ->
-            val message = "🎅 SECRET SANTA CHEZ MARVIN & SOPHIE 🎄\\n📅 26 décembre 2026\\n\\n" +
-                "Ho ho ho, ${people[i].name} ! 🎁\\n" +
+            val message = "🎅 SECRET SANTA CHEZ MARVIN & SOPHIE 🎄\n📅 26 décembre 2026\n\n" +
+                "Ho ho ho, ${people[i].name} ! 🎁\n" +
                 "Cette année, tu dois offrir un cadeau à ${people[assignment[i]].name} !" +
-                (if (money.isNotBlank()) "\\n🎁 Budget : $money €" else "") +
-                (if (note.isNotBlank()) "\\n$note" else "") +
-                "\\n\\n🤫 Tirage réalisé automatiquement par l'application Secret Santa. " +
+                (if (money.isNotBlank()) "\n🎁 Budget : $money €" else "") +
+                (if (note.isNotBlank()) "\n$note" else "") +
+                "\n\n🤫 Tirage réalisé automatiquement par l'application Secret Santa. " +
                 "Chacun reçoit uniquement sa propre attribution. Garde le secret jusqu'au 26 décembre ! 🎄"
             Pair(people[i].phone, sms.divideMessage(message))
         }
