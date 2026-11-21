@@ -9,6 +9,7 @@ import android.content.pm.PackageManager
 import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
+import android.provider.ContactsContract
 import android.telephony.SmsManager
 import android.telephony.SubscriptionManager
 import android.text.InputType
@@ -60,6 +61,21 @@ class MainActivity : Activity() {
             text = "+ Ajouter un participant"
             setOnClickListener { if (!running) addPerson() }
         })
+        root.addView(Button(this).apply {
+            text = "📱 Choisir dans mes contacts"
+            setOnClickListener {
+                if (!running) {
+                    try {
+                        startActivityForResult(
+                            Intent(Intent.ACTION_PICK, ContactsContract.CommonDataKinds.Phone.CONTENT_URI),
+                            201
+                        )
+                    } catch (_: Exception) {
+                        toast("Impossible d'ouvrir les contacts sur cet appareil")
+                    }
+                }
+            }
+        })
         heading("Exclusions entre participants")
         exclusions = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
         root.addView(exclusions)
@@ -107,6 +123,51 @@ class MainActivity : Activity() {
                     people.add(Person(n, p)); refresh()
                 }
             }.setNegativeButton("Annuler", null).show()
+    }
+
+    @Deprecated("Android activity result callback")
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode != 201 || resultCode != Activity.RESULT_OK || running) return
+        val uri = data?.data ?: return
+        try {
+            contentResolver.query(
+                uri,
+                arrayOf(
+                    ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME,
+                    ContactsContract.CommonDataKinds.Phone.NUMBER
+                ),
+                null, null, null
+            )?.use { cursor ->
+                if (!cursor.moveToFirst()) {
+                    toast("Aucun numéro trouvé pour ce contact")
+                    return
+                }
+                val rawName = cursor.getString(0).orEmpty().trim()
+                val rawPhone = cursor.getString(1).orEmpty()
+                val normalized = rawPhone.replace(Regex("[^+0-9]"), "")
+                if (rawName.isBlank() || !normalized.matches(Regex("\\\\+?[0-9]{8,15}"))) {
+                    toast("Nom ou numéro invalide : ajoute ce participant manuellement")
+                    return
+                }
+                val name = rawName.substringBefore(" ").ifBlank { rawName }
+                if (people.any { it.phone == normalized }) {
+                    toast("Ce numéro est déjà dans les participants")
+                    return
+                }
+                if (people.size >= 30) {
+                    toast("Maximum 30 participants")
+                    return
+                }
+                people.add(Person(name, normalized))
+                refresh()
+                toast("$name ajouté aux participants")
+            }
+        } catch (_: SecurityException) {
+            toast("Accès au contact refusé")
+        } catch (_: Exception) {
+            toast("Impossible de lire ce contact")
+        }
     }
 
     private fun refresh() {
